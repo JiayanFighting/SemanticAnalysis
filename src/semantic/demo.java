@@ -1,4 +1,4 @@
-package complie2;
+package semantic;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -40,12 +40,17 @@ import javax.swing.tree.TreeSelectionModel;
 import javax.swing.JLabel;
 
 import Entity.ACTIONTable;
+import Entity.CharTable;
 import Entity.DFATable;
 import Entity.DFATableState;
+import Entity.FourAddr;
 import Entity.GOTOTable;
 import Entity.SLRFormula;
 import Entity.SLRTree;
+import Entity.AddrNum;
+import Entity.grammerSemanticLoca;
 import Entity.grammerTable;
+import Entity.RreeSemanticRecord;
 
 import java.awt.Font;
 
@@ -55,19 +60,24 @@ public class demo {
 
 	private JFrame frame;
 	private JTextArea textArea;
-	private JTable table;
+	//private JTable table;
 	private DefaultTableModel tokenListTbModel;
-	private DefaultTableModel firstListTbModel;
+	//private DefaultTableModel firstListTbModel;
 	private DefaultTableModel errorListTbModel;
 	private DefaultTableModel grammererrorListTbModel;
-	private DefaultTableModel followListTbModel;
-	private DefaultTableModel slrListTbModel;
+	private DefaultTableModel semerrorListTbModel;
+	//private DefaultTableModel followListTbModel;
+	//private DefaultTableModel slrListTbModel;
 	private DefaultTableModel syntaxListTbModel;
 	private String filepath2;
 	private JScrollPane jScrollPane1;
 	private ArrayList<ACTIONTable> slrTable;
 	private DefaultTreeModel treeModel;
 	
+	//private JTextArea addrArea;
+	private JScrollPane jScrollPane2;
+	private DefaultTableModel charListTbModel;
+	private DefaultTableModel addrListTbModel;
 	// 运算符 operaters
 	// String[] operaters={
 	// ">",">=","<","<=","==","!=","|","&","||","&&","!","^","+","-","*","/","%","++","--","+=","-=","*=","%="};
@@ -149,19 +159,25 @@ public class demo {
 		panel_1.setBounds(0, 0, 1308, 819);
 		panel.add(panel_1);
 		panel_1.setLayout(null);
+		
+		final JPanel panel_5 = new JPanel();
+		panel_5.setBackground(new Color(176, 196, 222));
+		panel_5.setBounds(303, 13, 988, 785);
+		panel_1.add(panel_5);
+		panel_5.setLayout(null);
+		panel_5.setVisible(false);
 		final JPanel panel_2 = new JPanel();
 		panel_2.setBackground(new Color(176, 196, 222));
 		panel_2.setBounds(303, 13, 988, 785);
 		panel_1.add(panel_2);
 		panel_2.setLayout(null);
+		panel_2.setVisible(true);
 		final JPanel panel_4 = new JPanel();
 		panel_4.setBackground(new Color(176, 196, 222));
 		panel_4.setBounds(303, 13, 988, 785);
 		panel_1.add(panel_4);
 		panel_4.setLayout(null);
 		panel_4.setVisible(false);
-		
-		
 		
 		
 		JPanel panel_3 = new JPanel();
@@ -190,13 +206,26 @@ public class demo {
 		textAreaSP.setBounds(14, 87, 275, 309);
 		panel_1.add(textAreaSP);
 		textAreaSP.setViewportView(textArea);
-
+		
 		// jScrollPane1.setViewportView(textArea);
 		// jScrollPane1.setRowHeaderView(new LineNumberHeaderView());
 		//textArea.setBounds(14, 87, 275, 309);
 	//	panel_1.add(textArea);
 		//textArea.setColumns(10);
-
+		final grammerTable[] grammerTable = new readDFATable().Wenfa();
+		System.out.println("***********文法表***********");
+		for(int i=0;i<grammerTable.length;i++)
+		{
+			System.out.print(i+" : ");
+			System.out.print(grammerTable[i].getName()+"->");
+			for(int j=0;j<grammerTable[i].getValue().length;j++)
+			{
+				System.out.print(grammerTable[i].getValue()[j]+" ");
+			}
+			System.out.println();
+		}
+		System.out.print("***********文法表结束***********");
+		
 		final JButton btnNewButton_2 = new JButton("选择文件");
 		btnNewButton_2.setFont(new Font("宋体", Font.BOLD, 15));
 		btnNewButton_2.setBackground(new Color(169, 169, 169));
@@ -231,6 +260,60 @@ public class demo {
 			        /**************开始构建树*************************************************/
 			        treeModel= getTreeModel(slrTreeArray,slrTreeArray.size()-1);
 					tree.setModel(treeModel);
+					/**************开始语义分析*************************************************/
+					System.out.println("********开始语义分析*************");
+					grammerSemanticLoca[] grammersemanticLoca=new readDFATable().GrammerSemanticLoca();
+					ArrayList<RreeSemanticRecord> treeSemanticRecord=new ArrayList<RreeSemanticRecord>();
+					ArrayList<String> addrList=new ArrayList<String>();//地址表L1 L2 L3
+					ArrayList<String> addrResult=new ArrayList<String>();//输出结果if a>b goto l1
+					ArrayList<AddrNum> addrNum=new ArrayList<AddrNum>();//地址与序号的对应表
+					ArrayList<CharTable> charTable=new ArrayList<CharTable>();//符号表
+					ArrayList<FourAddr> fourAddr=new ArrayList<FourAddr>();//地址与序号的对应表
+					ArrayList<String> param=new ArrayList<String>();//存数据
+					initRecord(treeSemanticRecord,slrTreeArray);
+					semanticTest(grammerTable,slrTreeArray,treeSemanticRecord,grammersemanticLoca,addrList,addrResult ,addrNum,charTable,fourAddr,param, slrTreeArray.size()-1);
+					ArrayList<String> b=change(addrResult,addrNum);
+					System.out.println("********地址表*************");
+					for(int i=0;i<addrList.size();i++)
+					{
+						System.out.println(addrList.get(i));
+						//addrListTbModel.addRow(new Object[] { i+1,addrResult.get(i)});
+					}
+					System.out.println("********地址输出表*************");
+					for(int i=0;i<addrResult.size();i++)
+					{
+						System.out.println(addrResult.get(i));
+						//addrListTbModel.addRow(new Object[] { i+1,addrResult.get(i)});
+					}
+					
+					System.out.println(b.size()+" "+fourAddr.size());
+					for(int i=0;i<b.size();i++)
+					{
+						String s="< "+fourAddr.get(i).getOp()+" , "+fourAddr.get(i).getParam1()+" , "+fourAddr.get(i).getParam2()+" , "+fourAddr.get(i).getToaddr()+" >";
+						addrListTbModel.addRow(new Object[] { i+1,b.get(i),s});
+					}
+					System.out.println("********地址对应表*************");
+					System.out.println("size="+addrNum.size());
+					for(int i=0;i<addrNum.size();i++)
+					{
+						System.out.println(addrNum.get(i).getAddr()+" "+addrNum.get(i).getNum());
+						
+					}
+					System.out.println("********四地址表*************");
+					for(int i=0;i<fourAddr.size();i++)
+					{
+						System.out.println("< "+fourAddr.get(i).getOp()+" , "+fourAddr.get(i).getParam1()+" , "+fourAddr.get(i).getParam2()+" , "+fourAddr.get(i).getToaddr()+" >");
+						
+					}
+					System.out.println("********符号表*************");
+					for(int i=0;i<charTable.size();i++)
+					{
+						System.out.println(charTable.get(i).getChara()+" "+charTable.get(i).getType()+" "+charTable.get(i).getOffset());
+						charListTbModel.addRow(new Object[] { charTable.get(i).getChara(),charTable.get(i).getType(),charTable.get(i).getOffset()});
+					}
+					System.out.println("********记录树信息表*************");
+					testRecord(treeSemanticRecord);
+					System.out.println("********结束语义分析*************");
 					
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
@@ -249,7 +332,7 @@ public class demo {
 		RowSorter<DefaultTableModel> sorter = new TableRowSorter<DefaultTableModel>(tokenListTbModel);
 	
 // first集表格
-		grammerTable[] grammerTable = new readDFATable().Wenfa();
+		
 		/*firstListTbModel = new DefaultTableModel(new Object[][] {}, new String[] {"符号", "FIRST集" });
 		String[][] firstGroup = getFirstDroup(grammerTable);
 		for (int i = 0; i < firstGroup.length; i++) {
@@ -282,6 +365,18 @@ public class demo {
 				new String[] { "出错符号", "出错地方", "出错原因" });
 		// errorListTbModel.addRow(new Object[] { "出错", "类别","出错原因" ,"value"});
 		RowSorter<DefaultTableModel> sorter7 = new TableRowSorter<DefaultTableModel>(grammererrorListTbModel);
+
+// 语义分析出错表格
+		semerrorListTbModel = new DefaultTableModel(new Object[][] {},
+				new String[] { "出错类型", "出错原因", "出错字符" });
+		// errorListTbModel.addRow(new Object[] { "出错", "类别","出错原因" ,"value"});
+		RowSorter<DefaultTableModel> sorter8 = new TableRowSorter<DefaultTableModel>(semerrorListTbModel);
+// 地址表格
+    addrListTbModel = new DefaultTableModel(new Object[][] {},new String[] { "序号", "三地址","四元式"});
+	RowSorter<DefaultTableModel> sorter10 = new TableRowSorter<DefaultTableModel>(addrListTbModel);
+// 符号表格
+	charListTbModel = new DefaultTableModel(new Object[][] {},new String[] { "序号", "符号" , "偏移"});
+		RowSorter<DefaultTableModel> sorter9 = new TableRowSorter<DefaultTableModel>(charListTbModel);
 // slr分析表格
 		/*slrListTbModel = new DefaultTableModel(new Object[][] {},
 				new String[] { "", "","","","","","","","","", "", "A", "C", "T", "I", "O", "N", 
@@ -363,6 +458,7 @@ public class demo {
 		
 		
 		
+		
 		JTable tokenListTb = new JTable();
 		tokenListTb.setBackground(new Color(230, 230, 250));
 		tokenListTb.setFillsViewportHeight(true);
@@ -377,6 +473,7 @@ public class demo {
 		lblToken.setBounds(125, 40, 254, 34);
 		panel_2.add(lblToken);
 		lblToken.setFont(new Font("宋体", Font.BOLD, 40));
+		
 		JTable errorListTb = new JTable();
 		errorListTb.setBackground(new Color(230, 230, 250));
 		errorListTb.setFillsViewportHeight(true);
@@ -387,90 +484,129 @@ public class demo {
 		panel_2.add(errorSP);
 		errorSP.setViewportView(errorListTb);
 		
-				JLabel lblErrorTable = new JLabel("ERROR TABLE");
-				lblErrorTable.setBounds(676, 37, 248, 41);
-				panel_2.add(lblErrorTable);
-				lblErrorTable.setFont(new Font("宋体", Font.BOLD, 40));
-				
-				
-				
-				
-				
-				JTable syntaxListTb = new JTable();
-				syntaxListTb.setBackground(new Color(230, 230, 250));
-				syntaxListTb.setFillsViewportHeight(true);
-				syntaxListTb.setModel(syntaxListTbModel);
-				syntaxListTb.setRowSorter(sorter6);
-				JScrollPane syntaxSP = new JScrollPane();
-				syntaxSP.setBounds(46, 72, 611, 314);
-				panel_4.add(syntaxSP);
-				syntaxSP.setViewportView(syntaxListTb);
-				JTable grammererrorListTb = new JTable();
-				grammererrorListTb.setBackground(new Color(230, 230, 250));
-				grammererrorListTb.setFillsViewportHeight(true);
-				grammererrorListTb.setModel(grammererrorListTbModel);
-				grammererrorListTb.setRowSorter(sorter7);
-				JScrollPane grammererrorSP = new JScrollPane();
-				grammererrorSP.setBounds(46, 447, 611, 325);
-				panel_4.add(grammererrorSP);
-				grammererrorSP.setViewportView(grammererrorListTb);
-				
-				JLabel lblAnalysisTable = new JLabel("Analysis TABLE");
-				lblAnalysisTable.setBounds(198, 19, 320, 40);
-				panel_4.add(lblAnalysisTable);
-				lblAnalysisTable.setFont(new Font("宋体", Font.BOLD, 40));
-				
-				JLabel lblErrorTable_1 = new JLabel("ERROR TABLE");
-				lblErrorTable_1.setFont(new Font("宋体", Font.BOLD, 40));
-				lblErrorTable_1.setBounds(219, 395, 254, 40);
-				panel_4.add(lblErrorTable_1);
-					
-				
-				/**
-				 * 面板切换的方法（写在内部类里）
-				 * @author Administrator
-				 *
-				 */
-				class ControlPanel {
-					public void choose(int type) {
-						//sorter = new TableRowSorter<DefaultTableModel>(stuListTbModel);
-						//stuListTb.setRowSorter(null); 
-						panel_2.setVisible(false);
-						panel_4.setVisible(false);
-					    switch (type) {
-					    case 0 :
-					    	panel_2.setVisible(true);
-					    	break;
-					    case 1 :
-					    	panel_4.setVisible(true);
-					    	break;
-			
-					    }
-					}
-				}
-				JButton button = new JButton("\u8BCD\u6CD5\u5206\u6790");
-				button.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						//切换面板
-					    ControlPanel mcp = new ControlPanel();
-					    mcp.choose(0);
-					}
-				});
-				button.setBackground(new Color(169, 169, 169));
-				button.setBounds(73, 423, 150, 40);
-				panel_1.add(button);
-				
-				JButton button_1 = new JButton("\u8BED\u6CD5\u5206\u6790");
-				button_1.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						//切换面板
-					    ControlPanel mcp = new ControlPanel();
-					    mcp.choose(1);
-					}
-				});
-				button_1.setBackground(new Color(169, 169, 169));
-				button_1.setBounds(73, 502, 150, 40);
-				panel_1.add(button_1);
+		JLabel lblErrorTable = new JLabel("ERROR TABLE");
+		lblErrorTable.setBounds(676, 37, 248, 41);
+		panel_2.add(lblErrorTable);
+		lblErrorTable.setFont(new Font("宋体", Font.BOLD, 40));
+		JTable syntaxListTb = new JTable();
+		syntaxListTb.setBackground(new Color(230, 230, 250));
+		syntaxListTb.setFillsViewportHeight(true);
+		syntaxListTb.setModel(syntaxListTbModel);
+		syntaxListTb.setRowSorter(sorter6);
+		JScrollPane syntaxSP = new JScrollPane();
+		syntaxSP.setBounds(46, 72, 611, 314);
+		panel_4.add(syntaxSP);
+		syntaxSP.setViewportView(syntaxListTb);
+		JTable grammererrorListTb = new JTable();
+		grammererrorListTb.setBackground(new Color(230, 230, 250));
+		grammererrorListTb.setFillsViewportHeight(true);
+		grammererrorListTb.setModel(grammererrorListTbModel);
+		grammererrorListTb.setRowSorter(sorter7);
+		JScrollPane grammererrorSP = new JScrollPane();
+		grammererrorSP.setBounds(46, 447, 611, 325);
+		panel_4.add(grammererrorSP);
+		grammererrorSP.setViewportView(grammererrorListTb);
+		
+		JLabel lblAnalysisTable = new JLabel("Analysis TABLE");
+		lblAnalysisTable.setBounds(198, 19, 320, 40);
+		panel_4.add(lblAnalysisTable);
+		lblAnalysisTable.setFont(new Font("宋体", Font.BOLD, 40));
+		
+		JLabel lblErrorTable_1 = new JLabel("ERROR TABLE");
+		lblErrorTable_1.setFont(new Font("宋体", Font.BOLD, 40));
+		lblErrorTable_1.setBounds(219, 395, 254, 40);
+		panel_4.add(lblErrorTable_1);
+		
+		JTable semerrorListTb = new JTable();
+		semerrorListTb.setBackground(new Color(230, 230, 250));
+		semerrorListTb.setFillsViewportHeight(true);
+		semerrorListTb.setModel(semerrorListTbModel);
+		semerrorListTb.setRowSorter(sorter8);
+		JScrollPane semerrorSP = new JScrollPane();
+		semerrorSP.setBounds(528, 531, 446, 204);
+		panel_5.add(semerrorSP);
+		semerrorSP.setViewportView(semerrorListTb);
+		
+		JTable charListTb = new JTable();
+		charListTb.setBackground(new Color(230, 230, 250));
+		charListTb.setFillsViewportHeight(true);
+		charListTb.setModel(charListTbModel);
+		charListTb.setRowSorter(sorter9);
+		JScrollPane charSP = new JScrollPane();
+		charSP.setBounds(534, 76, 440, 369);
+		panel_5.add(charSP);
+		charSP.setViewportView(charListTb);
+		
+		JTable addrListTb = new JTable();
+		addrListTb.setBackground(new Color(230, 230, 250));
+		addrListTb.setFillsViewportHeight(true);
+		addrListTb.setModel(addrListTbModel);
+		addrListTb.setRowSorter(sorter10);
+		JScrollPane addrSP = new JScrollPane();
+		addrSP.setBounds(25, 76, 475, 659);
+		panel_5.add(addrSP);
+		addrSP.setViewportView(addrListTb);
+		JLabel seAddrTable = new JLabel("Address TABLE");
+		seAddrTable.setBounds(112, 19, 320, 40);
+		panel_5.add(seAddrTable);
+		seAddrTable.setFont(new Font("宋体", Font.BOLD, 40));
+		JLabel charaTable = new JLabel("Symbol TABLE");
+		charaTable.setBounds(616, 19, 320, 40);
+		panel_5.add(charaTable);
+		charaTable.setFont(new Font("宋体", Font.BOLD, 40));
+		JLabel seErrorTable = new JLabel("Error TABLE");
+		seErrorTable.setBounds(616, 478, 320, 40);
+		panel_5.add(seErrorTable);
+		seErrorTable.setFont(new Font("宋体", Font.BOLD, 40));
+		/**
+		 * 面板切换的方法（写在内部类里）
+		 * @author Administrator
+		 *
+		 */
+		class ControlPanel {
+			public void choose(int type) {
+				//sorter = new TableRowSorter<DefaultTableModel>(stuListTbModel);
+				//stuListTb.setRowSorter(null); 
+				panel_2.setVisible(false);
+				panel_4.setVisible(false);
+				panel_5.setVisible(false);
+			    switch (type) {
+			    case 0 :
+			    	panel_2.setVisible(true);
+			    	break;
+			    case 1 :
+			    	panel_4.setVisible(true);
+			    	break;
+			    case 2 :
+			    	panel_5.setVisible(true);
+			    	break;
+	
+			    }
+			}
+		}
+		JButton button = new JButton("\u8BCD\u6CD5\u5206\u6790");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//切换面板
+			    ControlPanel mcp = new ControlPanel();
+			    mcp.choose(0);
+			}
+		});
+		button.setBackground(new Color(169, 169, 169));
+		button.setBounds(73, 423, 150, 40);
+		panel_1.add(button);
+		
+		JButton button_1 = new JButton("\u8BED\u6CD5\u5206\u6790");
+		button_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//切换面板
+			    ControlPanel mcp = new ControlPanel();
+			    mcp.choose(1);
+			}
+		});
+		button_1.setBackground(new Color(169, 169, 169));
+		button_1.setBounds(73, 476, 150, 40);
+		panel_1.add(button_1);
 		
 				
 		JButton btnDfa = new JButton("DFA\u8F6C\u6362\u8868");
@@ -479,9 +615,38 @@ public class demo {
 		btnDfa.setBackground(new Color(169, 169, 169));
 		
 		JButton btnSlr = new JButton("SLR\u5206\u6790\u8868");
-		btnSlr.setBounds(73, 672, 150, 40);
+		btnSlr.setBounds(73, 648, 150, 40);
 		panel_1.add(btnSlr);
 		btnSlr.setBackground(new Color(169, 169, 169));
+		
+		JButton button_2 = new JButton("\u8BED\u4E49\u89C4\u5219");
+		button_2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				semanticRulePanel window = null;
+				try {
+					window = new semanticRulePanel();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				window.frame.setVisible(true);
+			}
+		});
+		button_2.setBackground(new Color(169, 169, 169));
+		button_2.setBounds(73, 707, 150, 40);
+		panel_1.add(button_2);
+		
+		JButton button_3 = new JButton("\u8BED\u4E49\u5206\u6790");
+		button_3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				//切换面板
+			    ControlPanel mcp = new ControlPanel();
+			    mcp.choose(2);
+			}
+		});
+		button_3.setBackground(new Color(169, 169, 169));
+		button_3.setBounds(73, 532, 150, 40);
+		panel_1.add(button_3);
 		btnSlr.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				SLRPanel window = null;
@@ -537,6 +702,15 @@ public class demo {
 		}
 		while (errorListTbModel.getRowCount() > 0) {
 			errorListTbModel.removeRow(0);
+		}
+		while (addrListTbModel.getRowCount() > 0) {
+			addrListTbModel.removeRow(0);
+		}
+		while (charListTbModel.getRowCount() > 0) {
+			charListTbModel.removeRow(0);
+		}
+		while (semerrorListTbModel.getRowCount() > 0) {
+			semerrorListTbModel.removeRow(0);
 		}
 		ArrayList<String[]> slrInput2=new ArrayList<String[]>();
 		//String[][] slrInput= null;
@@ -1400,6 +1574,10 @@ public class demo {
 						break;
 					}
 				}
+				if(grammerTable[i].getValue().length!=slrFormula.getNextString().length)
+				{
+					flag = false;
+				}
 				if (flag) {
 					return i;
 				}
@@ -1943,6 +2121,7 @@ public class demo {
 		while (grammererrorListTbModel.getRowCount() > 0) {
 			grammererrorListTbModel.removeRow(0);
 		}
+		//addrArea.setText("");
 		ArrayList<SLRTree> slrTreeArray=new ArrayList<SLRTree>();
 		String inputStr=" ";
 		ArrayList<String> output=new ArrayList<String>();
@@ -1984,6 +2163,7 @@ public class demo {
 			 }*/
 			 else if(input.get(i)[1].equals("注释"))
 			 {
+				 inputStr +=input.get(i)[0]+" ";
 			 }
 			 else{
 				 inputStr +=input.get(i)[0]+" ";
@@ -2016,17 +2196,21 @@ public class demo {
 		 /********************初始化完成***********************/
 		 System.out.println("测试开始======================");
 		 int sign=0;
-		
+		 boolean ise1=false;
 		 do{
-			// System.out.println("状态栈顶部状态："+stateStack.peek());
-			// System.out.println("符号栈顶部状态："+charStack.peek());
-			// System.out.println("输入栈顶部状态："+inputStack.peek()); 
+			 System.out.println("======================");
+			 System.out.println("状态栈顶部状态："+stateStack.peek());
+			 System.out.println("符号栈顶部状态："+charStack.peek());
+			 System.out.println("输入栈顶部状态："+inputStack.peek()); 
+			 System.out.println("树栈顶部状态："+treeStack.peek()); 
 			 String next[]=findNext(slrTable,stateStack.peek(),inputStack.peek());
-			// System.out.println(next[0]+next[1]);
+			 System.out.println("======================");
 			 if(next[0]==null)
 			 {
-				// System.out.println("null      ===============");
-				 break;
+				 System.out.println("没找到  "+inputStack.peek());
+				 inputStack.pop();
+				 sign=sign+1;
+				 continue;
 			 }
 			 if(next[0].equals("acc"))
 			 {
@@ -2037,19 +2221,28 @@ public class demo {
 			 //s 3移进   输入栈第一个到符号栈最上面 ， 状态栈为下一个状态
 			 if(next[0].equals("s"))
 			 {
-			//	 System.out.print("移进");
-			//	 System.out.println("   下一状态："+next[1]);
+				 System.out.print("移进");
+				 System.out.println("   下一状态："+next[1]);
 				 charStack.push(inputStack.peek());
 				 inputStack.pop();
-				 treeStack.push(getFatherId(slrTreeArray,sign));
-				 sign=sign+1;
+				 if(ise1)
+				 {
+					 treeStack.push(slrTreeArray.size()-2);
+					 ise1=false; 
+				 }
+				 else{
+					 treeStack.push(getFatherId(slrTreeArray,sign));
+					 sign=sign+1;
+					 ise1=false;
+				 }
 				 stateStack.push(Integer.parseInt(next[1]));
+				 
 				 
 			 }
 			 //r 3 规约   输入栈第一个到符号栈最上面 ， 状态栈为下一个状态
 			 else if(next[0].equals("r"))//这里要画树
 			 {
-				// System.out.println("规约");
+				 System.out.println("规约");
 				 int num = Integer.parseInt(next[1]);
 				 String out="";
 				 String tree="";
@@ -2089,36 +2282,63 @@ public class demo {
 				 {
 					 grammererrorListTbModel.addRow(new Object[]{"第"+getLine(sign)+"行错误",inputStack.peek(),"不匹配右括号"});
 					 inputStack.pop();
-					 
+					 sign=sign+1;
 				 }
 				 else if(num==1)
 				 {
 					 grammererrorListTbModel.addRow(new Object[]{"第"+getLine(sign)+"行错误",inputStack.peek(),"缺少运算分量",""});
 					 inputStack.push("id");
-					 
+					 SLRTree slrTree =new SLRTree();
+					 slrTree.setName("id");
+					 String a="-1";
+					 String[] b=a.split(" ");
+					 slrTree.setChildId(b);
+					 slrTreeArray.add(slrTree);
+					 ise1=true;
 				 }
 				 else if(num==3)
 				 {
 					 grammererrorListTbModel.addRow(new Object[]{"第"+getLine(sign)+"行错误",inputStack.peek(),"缺少运算符"});
 					 inputStack.push("+");
-					 
+					 SLRTree slrTree =new SLRTree();
+					 slrTree.setName("+");
+					 String a="-1";
+					 String[] b=a.split(" ");
+					 slrTree.setChildId(b);
+					 slrTreeArray.add(slrTree);
+					 ise1=true;
 				 }
 				 
 			 }
 		 }while(true);
 		 for(int i=0;i<slrTreeArray.size();i++)
 		 {
-			// System.out.print("序号 "+i);
-			// System.out.print(" 元素"+slrTreeArray.get(i).getName());
+			 System.out.print("序号 "+i);
+			 System.out.print(" 元素"+slrTreeArray.get(i).getName());
 			 for(int j=0;j<slrTreeArray.get(i).getChildId().length;j++)
 			 {
-			//	 System.out.print("  孩子编号："+slrTreeArray.get(i).getChildId()[j]);
+				 System.out.print("  孩子编号："+slrTreeArray.get(i).getChildId()[j]);
 			 }
-			// System.out.println();
+			 System.out.println();
+		 }
+		 for(int i=0;i<slrTreeArray.size();i++)
+		 {
+			 System.out.print("序号 "+i);
+			 System.out.print(" 元素"+slrTreeArray.get(i).getName());
+			 System.out.print("  孩子：");
+			 for(int j=slrTreeArray.get(i).getChildId().length-1;j>=0;j--)
+			 {
+				 if(slrTreeArray.get(i).getChildId()[j].equals("-1"))
+				 {
+					 System.out.print("无");
+					 break;
+				 }
+				 System.out.print(" "+slrTreeArray.get(Integer.parseInt(slrTreeArray.get(i).getChildId()[j])).getName());
+			 }
+			 System.out.println();
 		 }
 		// getAnalysisTree(slrTreeArray);
 		return slrTreeArray;
-			 
 		 }
 	
 	
@@ -2198,11 +2418,15 @@ public class demo {
 		return fathNode;
 	}
 	
-	
+	/**
+	 * 获得当前行数
+	 * @param count
+	 * @return
+	 * @throws Exception
+	 */
 	public int getLine(int count) throws Exception{
 		String str=textArea.getText();
 		String[] a=str.split("\n");
-		//System.out.println("总共行数：==========="+a.length);
 		int len=0;
 		for(int i=0;i<a.length;i++)
 		{
@@ -2212,10 +2436,511 @@ public class demo {
 				return i+1;
 			}
 		}
-		
-	//	System.out.println("");
-	//	System.out.println(str);
 		return 0;
+	}
+	
+	/**
+	 * 语义分析开始
+	 * @throws Exception ****************************
+	 */
+	
+public void initRecord(ArrayList<RreeSemanticRecord> treeSemanticRecord,ArrayList<SLRTree> slrTreeArray){
+		
+		for(int i=0;i<slrTreeArray.size();i++)
+		{
+			int firstchildID=Integer.parseInt(slrTreeArray.get(i).getChildId()[0]);
+			if(firstchildID==-1)
+			{
+				int fatherId=getFatherId(slrTreeArray,i);
+				String fatherName=slrTreeArray.get(fatherId).getName();
+				if(fatherName.equals("id")||fatherName.equals("digit"))
+				{
+					RreeSemanticRecord r=new RreeSemanticRecord();
+					r.setTreeNodeNum(fatherId);
+					r.setTreeNodeName(fatherName);
+					r.setProperty("lexeme");
+					r.setValue(slrTreeArray.get(i).getName());
+					treeSemanticRecord.add(r);
+				}
+			}
+		}
+		RreeSemanticRecord r=new RreeSemanticRecord();
+		r.setTreeNodeNum(slrTreeArray.size()+1);
+		r.setTreeNodeName("t");
+		r.setProperty("t");
+		r.setValue("ceshi");
+		treeSemanticRecord.add(r);
+	}
+	/**
+	 * 
+	 * @param grammerTable产生式表
+	 * @param slrTreeArray语义分析得到的树
+	 * @param treeSemanticRecord记录树各个结点信息的集合
+	 * @param grammersemanticLoca读文档的表记录每个产生式的哪里有语义片段
+	 * @param num当前树结点
+	 * @throws Exception
+	 */
+	public void semanticTest(grammerTable[] grammerTable,ArrayList<SLRTree> slrTreeArray,ArrayList<RreeSemanticRecord> treeSemanticRecord,
+			grammerSemanticLoca[] grammersemanticLoca,ArrayList<String> addrList,
+			ArrayList<String> addrResult,ArrayList<AddrNum> addrNum,
+			ArrayList<CharTable> charTable,ArrayList<FourAddr> fourAddr,ArrayList<String> param,int num) throws Exception{
+		
+		//找到对应的产生式
+		System.out.println(" "+slrTreeArray.get(num).getName());
+		System.out.println("num:"+num);
+		
+		int length=slrTreeArray.get(num).getChildId().length;//孩子结点的个数
+		//System.out.println("孩子个数length:"+length);
+		String beforString = slrTreeArray.get(num).getName();//结点的名字
+		String nextString="";
+		for(int j=length-1;j>=0;j--)
+		 {
+			 if(slrTreeArray.get(num).getChildId()[j].equals("-1"))
+			 {
+				 nextString="no";
+				 break;
+			 }
+			 nextString+=slrTreeArray.get(Integer.parseInt(slrTreeArray.get(num).getChildId()[j])).getName()+" ";
+		 }
+		//System.out.println("孩子字符串："+nextString);
+		SLRFormula formula=new SLRFormula();
+		formula.setBeforeString(beforString);
+		formula.setFlag(0);
+		formula.setNextString(nextString.split(" "));
+		int grammerNum=findActionNum(formula,grammerTable);//文法表的产生式序号
+		System.out.println("产生式的编号："+grammerNum);
+		//语法分析开始
+		
+		//对产生式的每一部分
+		for(int i=0;i<length;i++){
+			//当前位置有程序片段
+			//num节点编号，grammarNum产生式编号，i产生式的位置
+			record(grammersemanticLoca,slrTreeArray, treeSemanticRecord,addrList,addrResult, addrNum, charTable, fourAddr, param, num,grammerNum,i);
+        	
+        	int firstchildID=Integer.parseInt(slrTreeArray.get(num).getChildId()[0]);
+        	if(firstchildID!=-1)//自己是叶节点，结束
+        	{
+        	//	System.out.println("不是叶节点");
+        		//对当前子节点，如果有孩子结点，递归，无孩子结点，跳过
+            	int childID=Integer.parseInt(slrTreeArray.get(num).getChildId()[length-1-i]);
+            //	System.out.println("====孩子结点:"+childID);
+            	semanticTest(grammerTable,slrTreeArray,treeSemanticRecord,grammersemanticLoca,addrList, addrResult, addrNum, charTable, fourAddr, param, childID);
+        	}
+		}
+		//最后是否也有语义片段
+		//System.out.println("产生式最后");
+		record(grammersemanticLoca,slrTreeArray, treeSemanticRecord,addrList,addrResult, addrNum, charTable, fourAddr, param, num,grammerNum,length);
+       
+	}
+	
+	/**
+	 * 获得当前产生式当前位置是否有语义规则片段，有则返回片段号，无则返回-1
+	 * @param grammerNum
+	 * @param loc
+	 * @param grammersemanticLoca
+	 * @return
+	 */
+	public int isExitSemanticRule(int grammerNum,int loc,grammerSemanticLoca[] grammersemanticLoca){
+		for(int i=0;i<grammersemanticLoca.length;i++)
+		{
+			if(grammersemanticLoca[i].getGrammerNum()==grammerNum&&grammersemanticLoca[i].getRulelLoc()==loc)
+			{
+				return grammersemanticLoca[i].getRuleNum();
+			}
+		}
+		return -1;
+	}
+	
+	public void record(grammerSemanticLoca[] grammersemanticLoca,ArrayList<SLRTree> slrTreeArray,
+			ArrayList<RreeSemanticRecord> treeSemanticRecord,ArrayList<String> addrList,
+			ArrayList<String> addrResult,ArrayList<AddrNum> addrNum,ArrayList<CharTable> charTable,
+			ArrayList<FourAddr> fourAddr,ArrayList<String> param,int treeNodeNum,int grammerNum,int loc){
+		
+		int ruleNum=isExitSemanticRule(grammerNum,loc,grammersemanticLoca);
+		if(ruleNum!=-1)
+		{
+			System.out.println("产生式"+grammerNum+" 位置"+loc+" 的语义片段序号："+ruleNum);
+		}
+		switch(ruleNum){
+		case 1:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_1(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 2:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_2(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 3:
+			System.out.println("第"+ruleNum+"个");
+			String s3=new semanticRule().semanticRule_3(treeSemanticRecord,slrTreeArray,charTable, fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			String[] e3=s3.split(" ");
+			if(e3[0].equals("error"))
+			{
+				semerrorListTbModel.addRow((new Object[]{3,"变量不匹配",e3[2]+" "+e3[3]}));
+				break;
+			}
+			addrResult.add(s3);
+			break;
+		case 4:
+			System.out.println("第"+ruleNum+"个");
+			String s4=new semanticRule().semanticRule_4(treeSemanticRecord,slrTreeArray,charTable, fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			String[] e4=s4.split(" ");
+			if(e4[0].equals("error"))
+			{
+				semerrorListTbModel.addRow((new Object[]{3,"变量不匹配",e4[2]+" "+e4[3]}));
+				break;
+			}
+			addrResult.add(s4);
+			break;
+		case 5:
+			System.out.println("第"+ruleNum+"个");
+			String s5=new semanticRule().semanticRule_5(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			
+			addrResult.add(s5);
+			break;
+		case 6:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_6(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			 //testRecord(treeSemanticRecord);
+			break;
+		case 7:
+			System.out.println("第"+ruleNum+"个");
+			String e7=new semanticRule().semanticRule_7(treeSemanticRecord,slrTreeArray,charTable, treeNodeNum);
+			// testRecord(treeSemanticRecord);
+			String[] e77=e7.split(" ");
+			if(e77[0].equals("error"))
+			{
+				semerrorListTbModel.addRow((new Object[]{1,"变量未定义",e77[2]}));
+			}
+			break;
+		case 8:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_8(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 9:
+			System.out.println("第"+ruleNum+"个");
+			String s9=new semanticRule().semanticRule_9(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			
+			addrResult.add(s9);
+		case 10:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_10(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 11:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_11(treeSemanticRecord,slrTreeArray,treeNodeNum,addrList);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 12:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_12(treeSemanticRecord,slrTreeArray,treeNodeNum, addrResult, addrNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 13:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_13(treeSemanticRecord,slrTreeArray, addrList, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 14:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_14(treeSemanticRecord,slrTreeArray,addrResult, addrNum, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 15:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_15(treeSemanticRecord,slrTreeArray, addrList, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 16:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_16(treeSemanticRecord,slrTreeArray,addrResult, addrNum, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 17:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_17(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 18:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_18(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 19:
+			System.out.println("第"+ruleNum+"个");
+			String[] s19=new semanticRule().semanticRule_19(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			String s191=s19[0];
+			String s192=s19[1];
+			
+			addrResult.add(s191);
+			addrResult.add(s192);
+			break;
+		case 20:
+			System.out.println("第"+ruleNum+"个");
+			String s20=new semanticRule().semanticRule_20(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			
+			addrResult.add(s20);
+			break;
+		case 21:
+			System.out.println("第"+ruleNum+"个");
+			String s21=new semanticRule().semanticRule_21(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			
+			addrResult.add(s21);
+			break;
+		case 22:
+			System.out.println("第"+ruleNum+"个");
+			String s22=new semanticRule().semanticRule_22(treeSemanticRecord,slrTreeArray,charTable, fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			System.out.println(s22+"=s22");
+			String[] e22=s22.split(" ");
+			if(e22[0].equals("error"))
+			{
+				if(e22[1].equals("1"))
+				{
+					semerrorListTbModel.addRow((new Object[]{1,"变量未定义",e22[2]}));
+				}
+				if(e22[1].equals("3"))
+				{
+					semerrorListTbModel.addRow((new Object[]{3,"变量不匹配",e22[2]+" "+e22[3]}));
+				}
+				break;
+			}
+			
+			addrResult.add(s22);
+			break;
+		case 23:
+			System.out.println("第"+ruleNum+"个");
+			String s23=new semanticRule().semanticRule_23(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			
+			addrResult.add(s23);
+			break;
+		case 24:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_24(treeSemanticRecord,slrTreeArray,treeNodeNum,addrList);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 25:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_25(treeSemanticRecord,slrTreeArray,treeNodeNum, addrResult, addrNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 26:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_26(treeSemanticRecord,slrTreeArray,treeNodeNum,addrList);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 27:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_27(treeSemanticRecord,slrTreeArray,treeNodeNum, addrResult, addrNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 28:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_28(treeSemanticRecord,slrTreeArray,treeNodeNum, addrResult, addrNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 29:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_29(treeSemanticRecord,slrTreeArray,treeNodeNum,addrList, addrResult, addrNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 30:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_30(treeSemanticRecord,slrTreeArray,treeNodeNum, addrResult, addrNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 31:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_31(treeSemanticRecord,slrTreeArray,treeNodeNum,addrList);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 32:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_32(treeSemanticRecord,slrTreeArray,treeNodeNum,addrList, addrResult, addrNum);
+			//testRecord(treeSemanticRecord);
+			testAddr(addrNum);
+			break;
+		case 33:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_33(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 34:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_34(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 35:
+			System.out.println("第"+ruleNum+"个");
+			String s35=new semanticRule().semanticRule_35(treeSemanticRecord,slrTreeArray,charTable, fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			String[] e35=s35.split(" ");
+			if(e35[0].equals("error"))
+			{
+				semerrorListTbModel.addRow((new Object[]{1,"变量未定义",e35[2]}));
+				break;
+			}
+			addrResult.add(s35);
+			break;
+		case 36:
+			System.out.println("第"+ruleNum+"个");
+			String[] s36=new semanticRule().semanticRule_36(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			String s361=s36[0];
+			String s362=s36[1];
+			
+			addrResult.add(s361);
+			addrResult.add(s362);
+			break;
+		case 37:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_37(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 38:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_38(treeSemanticRecord,slrTreeArray,treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			break;
+		case 39:
+			System.out.println("第"+ruleNum+"个");
+			String s39=new semanticRule().semanticRule_39(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			
+			addrResult.add(s39);
+			break;
+		case 40:
+			System.out.println("第"+ruleNum+"个");
+			String s40=new semanticRule().semanticRule_40(treeSemanticRecord,slrTreeArray,fourAddr, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+		
+			addrResult.add(s40);
+			break;
+		case 41:
+			System.out.println("第"+ruleNum+"个");
+			String e41=new semanticRule().semanticRule_41(treeSemanticRecord,slrTreeArray,charTable, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			String[] e411=e41.split(" ");
+			if(e411[0].equals("error"))
+			{
+				semerrorListTbModel.addRow((new Object[]{2,"变量重复定义",e411[2]}));
+			}
+			break;
+		case 42:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_42(treeSemanticRecord,slrTreeArray,param,treeNodeNum);
+			break;
+		case 43:
+			System.out.println("第"+ruleNum+"个");
+			new semanticRule().semanticRule_43(treeSemanticRecord,slrTreeArray,param,treeNodeNum);
+			break;
+		case 44:
+			System.out.println("第"+ruleNum+"个");
+			ArrayList<String> s44=new semanticRule().semanticRule_44(treeSemanticRecord,slrTreeArray,param,fourAddr, charTable, treeNodeNum);
+			String e44=s44.get(0);
+			String[] e441=e44.split(" ");
+			if(e441[0].equals("error"))
+			{
+				semerrorListTbModel.addRow((new Object[]{5,"过程名未定义",e441[2]}));
+			}
+			for(int i=0;i<s44.size();i++)
+			{
+				addrResult.add(s44.get(i));
+			}
+			break;
+		case 45:
+			System.out.println("第"+ruleNum+"个==============");
+			String e45=new semanticRule().semanticRule_45(treeSemanticRecord,slrTreeArray,charTable, treeNodeNum);
+			//testRecord(treeSemanticRecord);
+			String[] e451=e45.split(" ");
+			if(e451[0].equals("error"))
+			{
+				semerrorListTbModel.addRow((new Object[]{4,"过程名定义冲突",e451[2]}));
+			}
+			break;
+		default :
+			//System.out.println("没有"+ruleNum);
+			break;
+			
+		}
 		
 	}
+	public void testRecord(ArrayList<RreeSemanticRecord> treeSemanticRecord){
+		for(int i=0;i<treeSemanticRecord.size();i++)
+		{
+			System.out.print("结点号 "+treeSemanticRecord.get(i).getTreeNodeNum());
+			System.out.print(" 结点符号 "+treeSemanticRecord.get(i).getTreeNodeName());
+			System.out.print(" 属性"+treeSemanticRecord.get(i).getProperty());
+			System.out.println(" 值 "+treeSemanticRecord.get(i).getValue());
+		}
+	}
+	
+	public void testAddr(ArrayList<AddrNum> addrNum){
+		for(int i=0;i<addrNum.size();i++)
+		{
+			System.out.println(addrNum.get(i).getAddr()+"  "+addrNum.get(i).getNum());
+		}
+	}
+	
+	public String findValue(ArrayList<RreeSemanticRecord> treeSemanticRecord,int treeNodeNum,String property){
+		for(int i=0;i<treeSemanticRecord.size();i++)
+		{
+			if(treeSemanticRecord.get(i).getTreeNodeNum()==treeNodeNum&&treeSemanticRecord.get(i).getProperty().equals(property))
+			{
+				return treeSemanticRecord.get(i).getValue();
+			}
+		}
+		return "null";
+	}
+	
+	private ArrayList<String> change(ArrayList<String> addrResult,ArrayList<AddrNum> addrNum){
+		ArrayList<String> a= new ArrayList<String>();
+		for(int i=0;i<addrResult.size();i++)
+		{
+			String[] b=addrResult.get(i).split(" ");
+			StringBuffer sb2 = new StringBuffer();
+			for(int j=0;j<b.length;j++)
+			{
+				boolean is=false;
+				for(int z=0;z<addrNum.size();z++)
+				{
+					if(b[j].equals(addrNum.get(z).getAddr()))
+					{
+						sb2.append(addrNum.get(z).getNum()+" ");
+						is=true;
+						continue;
+					}
+				}
+				if(!is)
+				{
+					sb2.append(b[j]+" ");
+				}
+				
+			}
+			a.add(sb2.toString());
+		}
+		return a;
+	}
 }
+
+

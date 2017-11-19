@@ -1,4 +1,4 @@
-package complie2;
+package semantic;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,6 +23,7 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 
 import Entity.DFATable;
 import Entity.DFATableState;
+import Entity.grammerSemanticLoca;
 import Entity.grammerTable;
 
 public class readDFATable {
@@ -354,7 +355,7 @@ public class readDFATable {
         	 List list = java.util.Arrays.asList(result[i]);
         	 map.put(result[i][0],list);
          }
-         grammerTable[] w=new grammerTable[36];
+         grammerTable[] w=new grammerTable[38];
          int i=0;
          Set<String> get = map.keySet(); 
          for (String test:get) {
@@ -375,6 +376,38 @@ public class readDFATable {
 	          
          }
 		return w;
+     }
+     
+     public grammerSemanticLoca[] GrammerSemanticLoca() throws Exception{
+    	 File file = new File("SemanticLoca.xls");
+         String[][] result = getData(file, 0);
+         grammerSemanticLoca[] w=new grammerSemanticLoca[45];
+         for(int i=0;i<result.length;i++)
+         {
+        	// System.out.println(result[i][0]+result[i][1]+result[i][2]);
+        	 w[i]=new grammerSemanticLoca();
+       	     w[i].setGrammerNum(Integer.parseInt(result[i][0]));
+       	     w[i].setRulelLoc(Integer.parseInt(result[i][1]));
+       	     w[i].setRuleNum(Integer.parseInt(result[i][2]));
+       
+         }
+         //语义规则与产生式对应序列
+        /* System.out.println("语义规则与产生式对应序列==========");
+         for(int i1=0;i1<w.length;i1++)
+         {
+        	 System.out.println(w[i1].getGrammerNum()+" "+w[i1].getRulelLoc()+" "+w[i1].getRuleNum());
+         }
+         System.out.println("语义规则与产生式对应序列结束==========");*/
+		return w;
+     }
+
+     
+     public String[][] showRule() throws Exception{
+    	 File file = new File("3.xls");
+         String[][] result = getData(file, 0);
+         System.out.println(result[0][0]+result[0][1]);
+         System.out.println("1"+result[0][1]);
+         return result;
      }
 
 }

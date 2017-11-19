@@ -1,4 +1,4 @@
-package complie2;
+package semantic;
 
 import java.awt.Color;
 import java.awt.Dimension;

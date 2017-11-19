@@ -1,0 +1,27 @@
+/*correct*/
+int x;@/*lexicalAnalysis*/
+int x;/*repeatDefini*/
+int y;
+char y;/*repeatDefini*/
+char z;
+int [2][2] a;
+char[4] b;
+x=0;
+y=x 1;/*noOp*/
+n=1;/*noDefini*/
+z=x;/*misMatching*/
+while(x>2)
+{
+if(x>0))/*noMatch*/
+{
+a[x][y]=x y;/*syntaxAnalysis*/
+}
+else
+{
+b[0]=z;
+}
+}
+proc x;int i;int j;i=i+1;/*repeat*/
+/*noDefi*/
+call demo2(x,y);
+

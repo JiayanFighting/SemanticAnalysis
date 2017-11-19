@@ -1,4 +1,4 @@
-package complie2;
+package semantic;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -72,16 +72,16 @@ public class SLRPanel {
 		
 		slrListTbModel = new DefaultTableModel(new Object[][] {},
 				new String[] { "", "","","","","","","","","", "", "A", "C", "T", "I", "O", "N", 
-						  	"","", "","","","","","","","","","", "",
+						  	"","", "","","","","","","","","","", "","",
 							"","","","G", "O", "T", "O","","",""});
 
 		slrListTbModel.addRow(new Object[] { "",  "+", "*", "-", "(", "id", "digit", "=", "call", ")", "[", "]", ",", ";",
-				">","true","false","not","and","or","if","then","else","while","do","proc","record","integer","real","$", 
+				">","true","false","not","and","or","if","{","else","while","do","proc","record","int","char","}","$", 
 				"S", "E", "L", "F", "B","P","D","X","C","T"});
-		for(int j=1;j<85;j++)
+		for(int j=1;j<120;j++)
 		{
 			slrListTbModel.addRow(new Object[] {j, "","","","","","","","","", "", "", "", "", "", "", "", 
-				  	"","", "","","","","","","","","","", "",
+				  	"","", "","","","","","","","","","","", "",
 					"","","","", "", "", "","","",""});
 		}
 		JTable slrListTb = new JTable();
@@ -220,7 +220,7 @@ public class SLRPanel {
 			return 19;
 		case "if":
 			return 20;
-		case "then":
+		case "{":
 			return 21;
 		case "else":
 			return 22;
@@ -232,32 +232,34 @@ public class SLRPanel {
 			return 25;
 		case "record":
 			return 26;
-		case "integer":
+		case "int":
 			return 27;
-		case "real":
+		case "char":
 			return 28;
-		case "$":
+		case "}":
 			return 29;
-		case "S":
+		case "$":
 			return 30;
-		case "E":
+		case "S":
 			return 31;
-		case "L":
+		case "E":
 			return 32;
-		case "F":
+		case "L":
 			return 33;
-		case "B":
+		case "F":
 			return 34;
-		case "P":
+		case "B":
 			return 35;
-		case "D":
+		case "P":
 			return 36;
-		case "X":
+		case "D":
 			return 37;
-		case "C":
+		case "X":
 			return 38;
-		case "T":
+		case "C":
 			return 39;
+		case "T":
+			return 40;
 		default:
 			return 0;
 		}

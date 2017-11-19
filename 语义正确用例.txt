@@ -1,0 +1,22 @@
+/*correct*/
+int x;
+int y;
+char z;
+int [2][2] a;
+char[4] b;
+x=0;
+y=0;
+while(x>2)
+{
+if(x>0)
+{
+a[x][y]=x+y;
+}
+else
+{
+b[0]=z;
+}
+}
+proc demo;int i;int j;i=i+1;
+call demo(x,y);
+
